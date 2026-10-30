@@ -29,3 +29,12 @@ fish_data |>
             max_scale_length=max(scalelength, na.rm=T), 
             mean_scale_length=mean(scalelength, na.rm=T))
 ```
+
+## 3. Committing multiple files 
+
+```{r}
+fish_data_clean <- fish_data |> 
+  filter(scalelength>1)
+fish_data_clean
+write_csv(fish_data_clean, "../data_clean/fish_data_clean.csv")
+```
