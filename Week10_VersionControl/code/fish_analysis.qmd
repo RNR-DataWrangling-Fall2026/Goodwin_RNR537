@@ -30,7 +30,7 @@ fish_data |>
             mean_scale_length=mean(scalelength, na.rm=T))
 ```
 
-## 3. Committing multiple files 
+## 3. Committing multiple files
 
 ```{r}
 fish_data_clean <- fish_data |> 
@@ -39,7 +39,13 @@ fish_data_clean
 write_csv(fish_data_clean, "../data_clean/fish_data_clean.csv")
 ```
 
+## 4. Pulling and Pushing
+
 ```{r}
-ggplot(fish_data, aes(x = scalelength)) +
-  geom_histogram()
+#4b 
+scalelength_plot <- ggplot(fish_data, aes(x = scalelength)) +
+  geom_histogram(bins=80)
+scalelength_plot
+#4c
+ggsave("../plots/scale_hist_by_length.jpg", plot = scalelength_plot)
 ```
