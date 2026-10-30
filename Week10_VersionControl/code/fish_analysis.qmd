@@ -16,12 +16,14 @@ fish_data <- read_csv("../data_raw/Gaeta_etal_CLC_data.csv")
 Observe the dataset.
 
 ```{r}
+# shows the first six rows of fish_data
 head(fish_data)
 ```
 
 Summary statistics for fish scale length.
 
 ```{r}
+# summarizes the data by creating new columns with the minimum, maximum, and mean scale length 
 fish_data |> 
   summarize(min_scale_length=min(scalelength, na.rm=T), 
             max_scale_length=max(scalelength, na.rm=T), 
