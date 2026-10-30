@@ -38,3 +38,8 @@ fish_data_clean <- fish_data |>
 fish_data_clean
 write_csv(fish_data_clean, "../data_clean/fish_data_clean.csv")
 ```
+
+```{r}
+ggplot(fish_data, aes(x = scalelength)) +
+  geom_histogram()
+```
