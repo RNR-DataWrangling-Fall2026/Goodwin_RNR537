@@ -250,6 +250,29 @@ c.  Create a new function based on the function you created in (a); in this new 
 
 ```{r}
 library(tidyverse)
+#6a
+count_plot <- function(df, color){
+  ggplot(data = df, aes(x = area, y = count, color = {{color}})) + 
+    geom_point(size = 3) +
+    labs(x = "Area (ha)",
+         y = "Number of Individuals") + 
+    theme_classic()
+}
+count_plot(count_data, state)
+
+#6b
+count_plot(count_data, site)
+ggsave("../plots/count_site.png", plot=get_last_plot())
+
+#6c
+count_plot2 <- function(df, x_axis, y_axis, color, x_lab, y_lab){
+  ggplot(data = df, aes(x = {{x_axis}}, y = {{y_axis}}, color = {{color}})) + 
+    geom_point(size = 3) +
+    labs(x = x_lab,
+         y = y_lab) + 
+    theme_classic()
+}
+count_plot2(count_data, area, count, site, "Area (ha)", "Number of Individuals")
 ```
 
 ### 7. Portal Species Time-Series Challenge (OPTIONAL)
