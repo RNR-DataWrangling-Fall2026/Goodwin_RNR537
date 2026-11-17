@@ -211,6 +211,28 @@ if (name == "Stegosauria") {
     # another set of a and b values
   }
 } else if ...
+
+#4
+get_mass_from_length_by_name <- function(length, name){
+  if (name == "Stegosauria") {
+      mass <-  10.95 * length ^ 2.64
+    } else if (name == "Theropoda"){
+      mass <- 0.73 * length ^ 3.63
+    } else if (name == "Sauropoda"){
+      mass <- 214.44 * length ^ 1.46
+    } else {
+      mass <- NA
+    }
+    return(mass)
+}
+#4a
+get_mass_from_length_by_name(10, "Stegosauria")
+#4b
+get_mass_from_length_by_name(8, "Theropoda")
+#4c
+get_mass_from_length_by_name(12, "Sauropoda")
+#4d
+get_mass_from_length_by_name(13, "Ankylosauria")
 ```
 
 ### 5. Putting It All Together: Portal Rodents (30 points)
@@ -221,9 +243,10 @@ Download the following Portal data tables using code below (modify the `destfile
 
 ```{r}
 # download.file(url = "https://ndownloader.figshare.com/files/2292172",
-#   destfile = "surveys.csv")
+#   destfile = "../data_raw/surveys.csv")
 # download.file(url = "https://ndownloader.figshare.com/files/3299483",
-#   destfile = "species.csv")
+#   destfile = "../data_raw/species.csv")
+library(tidyverse)
 ```
 
 a.  Join `surveys` and `species` together so that each survey record has the genus, species, and taxa information. Keep only rodents (`taxa` is "Rodent"). Then, use a `stringr` function to add a column called `scientific_name` that combines `genus` and `species` with a space between them (e.g., "Dipodomys merriami"). Save the result as an object called `rodents`.
@@ -248,6 +271,67 @@ d.  Use `case_when` inside a `mutate` to add a column called `weight_class` with
 e.  Using `rodents`, remove the individuals with an "unknown" weight class and count the number of individuals in each `year`, `season`, and `weight_class`. Then, make a line plot with `year` on the x-axis, the count on the y-axis, lines colored by `weight_class`, and a separate panel for each `season`. Give your plot informative axis labels and use a theme of your choice.
 
     In a sentence or two, describe one pattern you see in the plot.
+
+```{r}
+species <- read_csv("../data_raw/species.csv")
+surveys <- read_csv("../data_raw/surveys.csv")
+
+#5a
+rodents <- surveys |> 
+  inner_join(species, join_by(species_id)) |> 
+  filter(taxa=="Rodent") |> 
+  mutate(scientific_name = str_c(genus, species, sep = " "))
+rodents
+
+#5b
+rodents |> 
+  mutate(id_level = if_else(str_detect(scientific_name, "sp\\."), 
+                            true = "genus only", 
+                            false = "species")) |> 
+  count(id_level)
+
+#5c
+rodents |> 
+  mutate(season = if_else(month %in% 4:9, 
+                          true = "warm", 
+                          false = "cool"))
+
+#5d
+rodents |> 
+  mutate(weight_class = case_when(weight < 20 ~ "small", 
+                                  weight >= 20 & weight < 50 ~ "medium", 
+                                  is.na(weight) ~ "unknown",
+                                  .default = "large" )) |> 
+  count(weight_class)
+
+rodents <- rodents |> 
+  mutate(id_level = if_else(str_detect(scientific_name, "sp\\."), 
+                            true = "genus only", 
+                            false = "species")) |> 
+  mutate(season = if_else(month %in% 4:9, 
+                          true = "warm", 
+                          false = "cool")) |> 
+  mutate(weight_class = case_when(weight < 20 ~ "small", 
+                                  weight >= 20 & weight < 50 ~ "medium", 
+                                  is.na(weight) ~ "unknown",
+                                  .default = "large" ))
+
+# Individuals with missing weights would be classified as "large" because they don't meet the parameters of the first two arguments and they would fall through to the .default argument. 
+
+#5e 
+rodents |> 
+  filter(weight_class != "unknown") |> 
+  count(year, season, weight_class) |> 
+  ggplot(aes(year, n, color = weight_class)) + 
+  geom_line() +
+  facet_wrap(~ season) +
+  labs(x = "Year", 
+       y = "Number of Individuals", 
+       color = "Weight Class") +
+  theme_classic()
+
+# Medium weight class is the most common across both seasons. 
+```
 
 ### 6. Challenge: A "Safe" Tidyverse Function (OPTIONAL)
 
