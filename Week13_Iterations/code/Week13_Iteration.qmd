@@ -244,6 +244,9 @@ Since loops (like functions) have some kind of placeholder in them (such as `i` 
 ```{r}
 #| eval: false
 
+i=2
+i=3
+
 data$biomass <- NA
 
 for (i in 1:nrow(data)){
@@ -251,6 +254,16 @@ for (i in 1:nrow(data)){
     data$biomass[i] <- data$a[i] * data$volume[i] ^ data$b[i]
   } else {
     data$biomass <- NA
+  }
+}
+
+data
+
+for (i in 1:nrow(data)){
+  if (data$volume[i] < 5) {
+    data$biomass[i] <- data$a[i] * data$volume[i] ^ data$b[i]
+  } else {
+    data$biomass[i] <- NA
   }
 }
 
@@ -270,6 +283,9 @@ To demonstrate, let's download some simulated satellite collar data. Make sure y
 ```{r}
 download.file("http://www.datacarpentry.org/semester-biology/data/locations.zip",
               destfile = "../data_raw/locations.zip") # where to put the zip file
+
+unzip(zipfile = "../data_raw/locations.zip", 
+      exdir = "../data/")
 ```
 
 Before we can loop through these files, we need to get the names of all of these files. The `list.files()` function will, well, list the files in the directory.
@@ -279,7 +295,9 @@ We want only the data files we downloaded, so we'll add the optional `pattern` a
 The pattern argument can also take regular expressions if you need to be more nuanced about which files to include.
 
 ```{r}
-
+data_files <- list.files(path = "../locations/", 
+                         pattern = "locations.*.txt")
+data_files
 ```
 
 ### Storing Loop Results in a Data Frame
@@ -289,13 +307,29 @@ Let's say we want to know the file name, count the number of observations, and g
 We would start by creating an empty data frame with `data.frame()`. Each argument is for one column: `column_name = an empty vector of the correct type and length`
 
 ```{r}
+num_files <- length(data_files)
+num_files
 
+results <- data.frame(file_name = vector(mode = "character", length = num_files), 
+                      count = vector("numeric", num_files), 
+                      min_lat = vector("numeric", num_files))
 ```
 
 Then we loop over the files, read each one in, and store the information in the `i`th row of the appropriate column (e.g., `results$count[i]`).
 
 ```{r}
-
+i = 2 # to check for loop 
+for (i in 1:num_files) {
+  # read in the file 
+  filename <- data_files[i]
+  locations <- read.csv(paste0("../locations/", filename))
+    # read.csv("../locations/locations-2016-01-01.txt")
+  
+  # add info to the results data frame 
+  results$file_name[i] <- filename
+  results$count[i] <- nrow(locations)
+  results$min_lat[i] <- min(locations$lat)
+}
 ```
 
 ### Let's Practice!
@@ -345,8 +379,8 @@ Again, an important exception is when we use `if`-`else` statements inside our f
 temps_df <- as.data.frame(temps)
 
 # doesn't work; functions with if-else statements are NOT vectorized
-# temps_df |>
-#   dplyr::mutate(category = hot_or_cold(temps))
+temps_df |>
+  dplyr::mutate(category = hot_or_cold(temps))
 
 # this works!
 temps_df |>

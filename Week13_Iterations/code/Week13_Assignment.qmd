@@ -177,7 +177,18 @@ for (i in 1:nrow(dinosaur_lengths)) {
 }
 head(dinosaur_lengths)
 #2c
-
+dinosaur_lengths |> 
+  group_by(species) |> 
+  summarize(
+    avg_mass = mean(case_when(
+      species == "Stegosauria" ~ 10.95 * lengths ^ 2.64, 
+      species == "Theropoda" ~ 0.73 * lengths ^ 3.63, 
+      species == "Sauropoda" ~ 214.44 * lengths ^ 1.46, 
+      species == "Ankylosauria" ~ 25.37 * lengths ^ 2.49
+    )
+  )) |> 
+  select(species, avg_mass) |> 
+  ungroup()
 ```
 
 ### 3. Multi-file Analysis (20 pts)
@@ -200,6 +211,53 @@ b.  Add code to the loop to calculate the minimum and maximum latitude in the fi
 
     Show the data frame as output.
 
+```{r}
+download.file("http://www.datacarpentry.org/semester-biology/data/individual_collar_data.zip", 
+              destfile = "../data_raw/movement_data.zip")
+unzip(zipfile = "../data_raw/movement_data.zip", 
+      exdir = "../data_raw/")
+data_files <- list.files(path = "../data_raw/", 
+                         pattern = "collar-data-.*.txt")
+data_files
+
+#3a
+num_files <- length(data_files)
+num_files
+
+for (i in 1:num_files) {
+  # read in the file 
+  filename <- data_files[i]
+  collar_data <- read.csv(paste0("../data_raw/", filename))
+  # read.csv("../locations/locations-2016-01-01.txt")
+  plot <- ggplot(collar_data, aes(x = long, y = lat)) +
+    geom_path() +
+    labs(title = filename, x = "Longitude", y = "Latitude")
+  print(plot)
+}
+
+#3b
+results <- data.frame(file_name = vector(mode = "character", length = num_files), 
+                      observations = vector("numeric", num_files), 
+                      min_lat = vector("numeric", num_files), 
+                      max_lat = vector("numeric", num_files))
+
+for (i in 1:num_files) {
+  # read in the file 
+  filename <- data_files[i]
+  collar_data <- read.csv(paste0("../data_raw/", filename))
+  # read.csv("../locations/locations-2016-01-01.txt")
+  plot <- ggplot(collar_data, aes(x = long, y = lat)) +
+    geom_path() +
+    labs(title = filename, x = "Longitude", y = "Latitude")
+  print(plot)
+  results$file_name[i] <- filename
+  results$observations[i] <- nrow(collar_data)
+  results$min_lat[i] <- min(collar_data$lat)
+  results$max_lat[i] <- max(collar_data$lat)
+}
+results
+```
+
 ### 4. DNA or RNA (20 points)
 
 This question has you write a function and then use the function in several different forms of iteration.
@@ -212,7 +270,17 @@ a.  Write a function that determines if a sequence of base pairs is DNA, RNA, or
 
 ```{r}
 # write your function here
-
+#4a
+dna_or_rna <- function(sequence) {
+  if (str_detect(sequence, "u")) {
+  output <- "RNA"
+  } else if (str_detect(sequence, "t")) {
+    output <- "DNA"
+  } else {
+    output <- "UNKNOWN"
+  }
+  return(output)
+}
 ```
 
 b.  Use the function to determine the sequence type for the following sequences.
@@ -221,6 +289,11 @@ b.  Use the function to determine the sequence type for the following sequences.
 seq1 <- "ttgaatgccttacaactgatcattacacaggcggcatgaagcaaaaatatactgtgaaccaatgcaggcg"
 seq2 <- "gauuauuccccacaaagggagugggauuaggagcugcaucauuuacaagagcagaauguuucaaaugcau"
 seq3 <- "gaaagcaagaaaaggcaggcgaggaagggaagaagggggggaaacc"
+
+#4b
+dna_or_rna(seq1)
+dna_or_rna(seq2)
+dna_or_rna(seq3)
 ```
 
 Before tackling the next questions (c-g), run the following code chunk to create a vector called sequences.
@@ -242,6 +315,39 @@ e.  This time, instead of using the function, place the `if`-`else` portion of y
 f.  OPTIONAL: Use the function and `sapply` to create a vector of sequence types for the values in sequences
 
 g.  OPTIONAL: Use the function, and `mutate()` to create a data frame that includes a column of sequences and a column of their types. First, run the following line of code to turn the sequence vector into a dataframe.
+
+```{r}
+#4c
+sequence_type <- vector("character", length(sequences))
+for (i in 1:length(sequences)) {
+  sequence_type[i] <- dna_or_rna(sequences[i])
+}
+sequence_type
+
+#4d
+sequence_types <- data.frame(sequence = vector(mode = "character", length = length(sequences)), 
+                        sequence_type = vector("character", length(sequences)))
+for (i in 1:length(sequences)) {
+  sequence_types$sequence[i] <- sequences[i]
+  sequence_types$sequence_type[i] <- dna_or_rna(sequences[i])
+}
+sequence_types
+
+#4e
+sequence_types <- data.frame(sequence = vector(mode = "character", length = length(sequences)),
+                             sequence_type = vector("character", length(sequences)))
+for (i in 1:length(sequences)) {
+  sequence_types$sequence[i] <- sequences[i]
+  if (str_detect(sequences[i], "u")) {
+    sequence_types$sequence_type[i] <- "RNA"
+  } else if (str_detect(sequences[i], "t")) {
+    sequence_types$sequence_type[i] <- "DNA"
+  } else {
+    sequence_types$sequence_type[i] <- "UNKNOWN"
+  }
+}
+sequence_types
+```
 
 ```{r}
 seq_df <- as.data.frame(sequences)
